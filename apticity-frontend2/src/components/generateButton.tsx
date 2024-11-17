@@ -1,24 +1,30 @@
+// GenerateButton.tsx
 import { useState } from "react";
-import { useWallet } from './walletProvider';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import OpenAI from 'openai';
+import OpenAI from "openai";
+import { useWallet } from "./walletProvider";
+import { AlertCircle, Loader2 } from "lucide-react";
 
+// OpenAI client initialization
 const openai = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
+  dangerouslyAllowBrowser: true,
 });
 
 interface GenerateButtonProps {
   prompt: string;
-  onImageGenerated: (imageUrl: string) => void;
+  onImageGenerated: (imageUrl: string) => void; // Callback to pass image URL to parent
 }
 
-export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps) {
+export const GenerateButton: React.FC<GenerateButtonProps> = ({
+  prompt,
+  onImageGenerated,
+}) => {
   const { walletAddress, connectWallet } = useWallet();
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showErrorModal, setShowErrorModal] = useState(false); // Track if the error modal should be shown
+
+  const demoImageUrl = "./images/ai2.webp"; // Path to demo image
 
   const handleGenerateClick = async () => {
     if (!walletAddress) {
@@ -28,7 +34,6 @@ export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps
 
     if (!prompt.trim()) {
       setError("Please enter a prompt first");
-      setShowErrorModal(true);
       return;
     }
 
@@ -44,25 +49,19 @@ export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps
       });
 
       const imageUrl = response.data[0]?.url;
-      
-      if (imageUrl && onImageGenerated) {
-        onImageGenerated(imageUrl);
+      if (imageUrl) {
+        onImageGenerated(imageUrl); // Pass image URL back to parent
+      } else {
+        throw new Error("No image returned from the API");
       }
     } catch (err: any) {
       console.error("Generation failed:", err);
-
-      // Handle specific error cases
-      let errorMessage = "Failed to generate image. Please try again later.";
-      if (err.message?.includes('Billing hard limit')) {
-        errorMessage = "OpenAI account has reached its usage limit. Please check your billing settings.";
-      } else if (err.status === 400) {
-        errorMessage = "Invalid request. Please check your prompt and try again.";
-      } else if (err.status === 429) {
-        errorMessage = "Rate limit exceeded. Please wait a moment and try again.";
-      }
-
-      setError(errorMessage);
-      setShowErrorModal(true); // Show the error modal
+      setError(
+        err.message?.includes("Billing hard limit")
+          ? "OpenAI account usage limit reached. Please check your billing settings."
+          : "Failed to generate image. Displaying a demo instead."
+      );
+      onImageGenerated(demoImageUrl); // Show demo image in case of error
     } finally {
       setIsGenerating(false);
     }
@@ -74,7 +73,7 @@ export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps
         onClick={handleGenerateClick}
         disabled={isGenerating}
         className={`px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 rounded-lg text-white flex items-center gap-2 ${
-          isGenerating ? 'opacity-75 cursor-not-allowed' : ''
+          isGenerating ? "opacity-75 cursor-not-allowed" : ""
         }`}
       >
         {isGenerating ? (
@@ -83,7 +82,7 @@ export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps
             GENERATING...
           </>
         ) : (
-          'GENERATE'
+          "GENERATE"
         )}
       </button>
 
@@ -111,7 +110,11 @@ export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps
                     }
                   }}
                 >
-                  <img src="/petra-wallet.png" alt="Petra" className="w-4 h-4" />
+                  <img
+                    src="/petra-wallet.png"
+                    alt="Petra"
+                    className="w-4 h-4"
+                  />
                   Connect Petra Wallet
                 </button>
               )}
@@ -127,7 +130,11 @@ export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps
                     }
                   }}
                 >
-                  <img src="/martian-wallet-icon.avif" alt="Martian" className="w-4 h-4" />
+                  <img
+                    src="/martian-wallet-icon.avif"
+                    alt="Martian"
+                    className="w-4 h-4"
+                  />
                   Connect Martian Wallet
                 </button>
               )}
@@ -142,28 +149,24 @@ export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps
         </div>
       )}
 
-      {/* Error Modal for Image Generation */}
-      {showErrorModal && error && (
+      {/* Error Popup */}
+      {error && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-black border border-pink-900/30 rounded-lg p-6 max-w-sm w-full mx-4">
+          <div className="bg-black border border-red-500 rounded-lg p-6 max-w-sm w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
               <AlertCircle className="text-red-500 w-6 h-6" />
-              <h3 className="text-lg font-semibold text-red-500">Error</h3>
+              <h3 className="text-lg font-semibold text-white">Error</h3>
             </div>
-            <p className="text-red-200/70 mb-6">
-              {error}
-            </p>
-            <div className="space-y-3">
-              <button
-                className="w-full px-4 py-2 bg-red-950/20 border border-red-900/30 rounded-lg text-red-200/70 hover:text-white hover:bg-red-950/30 transition-colors"
-                onClick={() => setShowErrorModal(false)}
-              >
-                Close
-              </button>
-            </div>
+            <p className="text-red-400 mb-6">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
     </div>
   );
-}
+};

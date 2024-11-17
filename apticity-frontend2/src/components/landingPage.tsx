@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Copy } from "lucide-react";
 import { GenerateButton } from "./generateButton";
+import MintNFTButton from "./mintNFT";
 
 interface PromptExample {
   id: string;
@@ -40,6 +41,7 @@ export default function LandingPage() {
   const [prompt, setPrompt] = useState("A collection of cute cyberpunk robots");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -87,12 +89,13 @@ export default function LandingPage() {
                   <button className="px-4 py-2 text-pink-200/70 hover:text-white">
                     SURPRISE ME
                   </button>
-                  <button><GenerateButton
-                    prompt={prompt}
-                    onImageGenerated={(imageUrl: string) =>
-                      setGeneratedImage(imageUrl)
-                    }
-                  />
+                  <button>
+                    <GenerateButton
+                      prompt={prompt}
+                      onImageGenerated={(imageUrl: string) =>
+                        setGeneratedImage(imageUrl)
+                      }
+                    />
                   </button>
                 </div>
               </div>
@@ -107,7 +110,9 @@ export default function LandingPage() {
                       className="w-full h-auto"
                     />
                   </div>
+                  <MintNFTButton imageUrl={generatedImage} />
                 </div>
+                
               )}
             </div>
           </div>
