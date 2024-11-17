@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Copy } from "lucide-react";
 import { GenerateButton } from "./generateButton";
 import MintNFTButton from "./mintNFT";
+import GeneratedImage from "./generatedImage"; // Import the GeneratedImage component
 
 interface PromptExample {
   id: string;
@@ -31,7 +32,7 @@ const examples: PromptExample[] = [
   },
   {
     id: "4",
-    title: "Stellar Black Hole ",
+    title: "Stellar Black Hole",
     description: "BLACK HOLE PAINTING, SKY, COSMIC BLUE HIGHLY STYLIZED",
     imageUrl: "/images/blackhole.avif",
   },
@@ -41,7 +42,7 @@ export default function LandingPage() {
   const [prompt, setPrompt] = useState("A collection of cute cyberpunk robots");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  
+  const [isDemoImage, setIsDemoImage] = useState(false); // Track if it's a demo image
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -51,6 +52,11 @@ export default function LandingPage() {
     } catch (err) {
       console.error("Failed to copy text: ", err);
     }
+  };
+
+  // Function to check if the generated image is a demo image from examples
+  const checkIfDemoImage = (imageUrl: string) => {
+    return examples.some((example) => example.imageUrl === imageUrl);
   };
 
   return (
@@ -92,9 +98,10 @@ export default function LandingPage() {
                   <button>
                     <GenerateButton
                       prompt={prompt}
-                      onImageGenerated={(imageUrl: string) =>
-                        setGeneratedImage(imageUrl)
-                      }
+                      onImageGenerated={(imageUrl: string) => {
+                        setGeneratedImage(imageUrl);
+                        setIsDemoImage(checkIfDemoImage(imageUrl)); // Check if it's a demo image
+                      }}
                     />
                   </button>
                 </div>
@@ -104,15 +111,13 @@ export default function LandingPage() {
               {generatedImage && (
                 <div className="mt-8">
                   <div className="max-w-lg mx-auto rounded-lg overflow-hidden border border-pink-900/30">
-                    <img
-                      src={generatedImage}
-                      alt="Generated artwork"
-                      className="w-full h-auto"
+                    <GeneratedImage
+                      imageUrl={generatedImage}
+                      isDemoImage={isDemoImage} // Pass the flag to GeneratedImage
                     />
                   </div>
                   <MintNFTButton imageUrl={generatedImage} />
                 </div>
-                
               )}
             </div>
           </div>

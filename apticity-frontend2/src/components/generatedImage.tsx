@@ -1,25 +1,24 @@
-import React from "react";
-
 interface GeneratedImageProps {
-  imageUrl: string;
-  isDemoImage?: boolean; // Flag to indicate if this is a demo image
-}
-
-const GeneratedImage: React.FC<GeneratedImageProps> = ({ imageUrl, isDemoImage = false }) => {
-  return (
-    <div className="mt-4 text-center">
-      <img
-        src={imageUrl}
-        alt="Generated or Demo"
-        className="w-64 h-64 mx-auto rounded-lg border border-gray-700"
-      />
-      {isDemoImage && (
-        <p className="mt-2 text-sm text-red-500">
-          Demo Image used as OpenAI billing limit reached
-        </p>
-      )}
-    </div>
-  );
-};
-
-export default GeneratedImage;
+    imageUrl: string;
+    isDemoImage: boolean; // Accept the flag indicating if the image is from the demo
+  }
+  
+  const GeneratedImage: React.FC<GeneratedImageProps> = ({ imageUrl, isDemoImage }) => {
+    return (
+      <div className="relative">
+        <img
+          src={imageUrl}
+          alt="Generated NFT"
+          className="w-full h-auto rounded-lg shadow-lg"
+        />
+        {isDemoImage && (
+          <div className="absolute top-2 left-2 px-4 py-2 bg-pink-950 text-white text-sm font-semibold rounded-lg">
+            Demo Image
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  export default GeneratedImage;
+  
