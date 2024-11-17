@@ -1,11 +1,13 @@
-import Component from "./components/nft-generator";
-import PromptExample from "./components/prompt-examples";
+import LandingPage from "./components/landingPage";
+import Navbar from "./components/navBar";
+import Footer from "./components/footer";
 
 function App() {
   return (
     <>
-    <Component />
-    <PromptExample />
+      <Navbar />
+      <LandingPage />
+      <Footer />
     </>
   );
 }
