@@ -127,7 +127,7 @@ export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps
                     }
                   }}
                 >
-                  <img src="/martian-wallet-icon.png" alt="Martian" className="w-4 h-4" />
+                  <img src="/martian-wallet-icon.avif" alt="Martian" className="w-4 h-4" />
                   Connect Martian Wallet
                 </button>
               )}
