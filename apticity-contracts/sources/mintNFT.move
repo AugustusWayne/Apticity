@@ -1,3 +1,0 @@
-module apticity::mintNFT {
-    
-}
