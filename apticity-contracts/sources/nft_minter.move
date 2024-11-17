@@ -1,5 +1,5 @@
 module apticity::nft_minter {
-    use std::string::{Self, String};
+    use std::string::{String};
     use std::vector;
     use std::signer;
     use aptos_framework::account;
@@ -7,7 +7,7 @@ module apticity::nft_minter {
     use aptos_framework::timestamp;
     use aptos_token_objects::collection;
     use aptos_token_objects::token;
-    use aptos_framework::object::{Self, Object};
+    use aptos_framework::object::{Object};
     use aptos_framework::coin;
 
     /// Custom error codes
