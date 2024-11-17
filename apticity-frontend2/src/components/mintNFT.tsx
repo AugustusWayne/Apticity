@@ -1,14 +1,17 @@
-// MintNFTButton.tsx
 import React from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 interface MintNFTButtonProps {
   imageUrl: string;
 }
 
 const MintNFTButton: React.FC<MintNFTButtonProps> = ({ imageUrl }) => {
+  const navigate = useNavigate(); // Initialize the navigate function
+
   const handleMint = () => {
     console.log("Minting NFT with image:", imageUrl);
-    alert("NFT Minting functionality will go here!");
+    // Redirect to the minting page when clicked
+    navigate("/minting", { state: { imageUrl } });
   };
 
   return (

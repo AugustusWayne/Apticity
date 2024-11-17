@@ -39,7 +39,7 @@ const examples: PromptExample[] = [
 ];
 
 export default function LandingPage() {
-  const [prompt, setPrompt] = useState("A collection of cute cyberpunk robots");
+  const [prompt, setPrompt] = useState("angel aesthetic robot girl, highly stylized");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isDemoImage, setIsDemoImage] = useState(false); // Track if it's a demo image
