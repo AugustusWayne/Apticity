@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Settings, ArrowRight, Copy } from 'lucide-react'
+import { Settings, Copy } from 'lucide-react'
 
 interface PromptExample {
   id: string
