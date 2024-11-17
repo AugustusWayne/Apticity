@@ -26,9 +26,9 @@ export function Navbar() {
           {/* Logo and Brand */}
           <div className="flex items-center">
             <img src="/ApticityLogo.png" alt="Apticity Logo" className="h-8 w-auto" />
-            <span className="ml-3 text-xl font-bold bg-gradient-to-r from-pink-500 to-orange-500 text-transparent bg-clip-text">
+            <a className="ml-3 text-xl font-bold bg-gradient-to-r from-pink-500 to-orange-500 text-transparent bg-clip-text" href="/">
               Apticity
-            </span>
+            </a>
           </div>
 
           {/* Navigation Links */}

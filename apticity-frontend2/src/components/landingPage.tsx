@@ -39,7 +39,9 @@ const examples: PromptExample[] = [
 ];
 
 export default function LandingPage() {
-  const [prompt, setPrompt] = useState("angel aesthetic robot girl, highly stylized");
+  const [prompt, setPrompt] = useState(
+    "angel aesthetic robot girl, highly stylized"
+  );
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isDemoImage, setIsDemoImage] = useState(false); // Track if it's a demo image
@@ -80,7 +82,15 @@ export default function LandingPage() {
               with AI.
             </h1>
             <p className="mb-12 text-xl text-pink-200/70">
-              Create and deploy NFT artwork in seconds
+              Create and deploy NFT artwork in seconds, powered by{" "}
+              <a
+                href="https://huggingface.co/stabilityai/stable-diffusion-2-1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-pink-500 hover:text-pink-400 transition-colors"
+              >
+                stable-diffusion-2-1
+              </a>
             </p>
 
             {/* Generator Interface */}
