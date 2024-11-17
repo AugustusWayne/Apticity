@@ -19,6 +19,7 @@
     "aptos": "^1.21.0",
     "axios": "^1.7.7",
     "framer-motion": "^11.11.17",
+    "lucide-react": "^0.460.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
