@@ -45,6 +45,7 @@ export default function LandingPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isDemoImage, setIsDemoImage] = useState(false); // Track if it's a demo image
+  
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -102,12 +103,10 @@ export default function LandingPage() {
                   className="w-full h-14 rounded-lg border border-pink-900/30 bg-pink-950/20 px-4 text-lg text-white"
                 />
                 <div className="absolute right-2 top-2 space-x-2">
-                  <button className="px-4 py-2 text-pink-200/70 hover:text-white">
-                    SURPRISE ME
-                  </button>
                   <button>
                     <GenerateButton
                       prompt={prompt}
+                      onPromptChange={setPrompt}
                       onImageGenerated={(imageUrl: string) => {
                         setGeneratedImage(imageUrl);
                         setIsDemoImage(checkIfDemoImage(imageUrl)); // Check if it's a demo image

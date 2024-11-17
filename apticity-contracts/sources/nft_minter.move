@@ -18,19 +18,12 @@ module apticity::nft_minter {
 
     /// Struct to store collection data
     struct CollectionData has key {
-        /// Name of the collection
         name: String,
-        /// Description of the collection
         description: String,
-        /// URI for collection metadata
         uri: String,
-        /// Maximum supply of NFTs
         max_supply: u64,
-        /// Current supply of NFTs
         current_supply: u64,
-        /// Mint start time
         mint_start_time: u64,
-        /// Mint price in APT
         mint_price: u64,
     }
 
@@ -42,14 +35,6 @@ module apticity::nft_minter {
         timestamp: u64,
     }
 
-    /// Initialize collection - can only be called once by contract owner
-    /// @param creator - Signer representing the creator/owner
-    /// @param name - Name of the collection
-    /// @param description - Description of the collection
-    /// @param uri - URI for collection metadata
-    /// @param max_supply - Maximum number of NFTs that can be minted
-    /// @param mint_start_time - Timestamp when minting can start
-    /// @param mint_price - Price in APT to mint one NFT
     public entry fun initialize_collection(
         creator: &signer,
         name: String,
@@ -59,7 +44,6 @@ module apticity::nft_minter {
         mint_start_time: u64,
         mint_price: u64
     ) {
-        // Create a new collection
         collection::create_unlimited_collection(
             creator,
             description,
@@ -68,7 +52,6 @@ module apticity::nft_minter {
             true, // mutate_setting
         );
 
-        // Store collection data
         move_to(creator, CollectionData {
             name,
             description,
@@ -80,11 +63,6 @@ module apticity::nft_minter {
         });
     }
 
-    /// Mint a new NFT
-    /// @param recipient - Address that will receive the NFT
-    /// @param name - Name of the NFT
-    /// @param description - Description of the NFT
-    /// @param uri - URI for NFT metadata
     public entry fun mint_nft(
         recipient: &signer,
         name: String,
@@ -102,17 +80,17 @@ module apticity::nft_minter {
         // Verify supply
         assert!(collection_data.current_supply < collection_data.max_supply, ECOLLECTION_NOT_INITIALIZED);
 
-        // Verify payment (if mint price is greater than 0)
+        // Verify payment
         if (collection_data.mint_price > 0) {
             let sender_balance = coin::balance_of<Coin>(recipient, aptos_framework::aptos_coin::APT);
             assert!(sender_balance >= collection_data.mint_price, ENOT_ENOUGH_FUNDS);
 
-            // Transfer mint price (if applicable)
+            // Transfer mint price
             coin::transfer_from(sender_balance, recipient, aptos_framework::aptos_coin::APT, collection_data.mint_price);
         }
 
-        // Create the token
-        let constructor_ref = token::create_from_account(
+        // Token creation (adjusted code)
+        token::mint(
             recipient,
             collection_data.name,
             description,
@@ -128,24 +106,4 @@ module apticity::nft_minter {
 
         // Emit mint event
         event::emit(MintEvent {
-            token_id: object::address_from_constructor_ref(&constructor_ref),
-            creator: @apticity,
-            recipient: recipient_addr,
-            timestamp: timestamp::now_seconds(),
-        });
-    }
-
-    /// Get collection data
-    /// @return CollectionData struct containing collection information
-    public fun get_collection_data(): CollectionData acquires CollectionData {
-        *borrow_global<CollectionData>(@apticity)
-    }
-
-    /// Check if minting is active
-    /// @return bool indicating if minting is currently active
-    public fun is_minting_active(): bool acquires CollectionData {
-        let collection_data = borrow_global<CollectionData>(@apticity);
-        timestamp::now_seconds() >= collection_data.mint_start_time &&
-            collection_data.current_supply < collection_data.max_supply
-    }
-}
+            token_id: object::address_from_constructor_ref(&constructor_ref), // Adjus
