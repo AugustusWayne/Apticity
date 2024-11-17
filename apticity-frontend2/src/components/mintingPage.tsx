@@ -1,20 +1,34 @@
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import MintProgressPopup from "./mintProgressPopUp";
 
 export default function MintingPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const imageUrl = location.state?.imageUrl;
 
+  const [isMinting, setIsMinting] = useState(false);
+
+  // Redirect to landing page if no image URL is provided
   if (!imageUrl) {
-    // Redirect to landing page if no image URL is provided
     navigate("/");
     return null;
   }
 
+  // Simulate minting process
+  const handleMint = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();  // Prevent the form from submitting
+
+    setIsMinting(true);
+    // Simulate minting with a delay (you can replace this with your actual minting logic)
+    setTimeout(() => {
+      setIsMinting(false);
+      alert("Minting complete!"); // Replace with actual logic after minting
+    }, 5000);
+  };
+
   return (
-    <div
-      className="min-h-screen bg-black text-white relative overflow-hidden"
-    >
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
       {/* Subtle Grid Background for Depth */}
       <div
         className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_#1a1a1a,_transparent_80%)] opacity-30 pointer-events-none"
@@ -54,7 +68,7 @@ export default function MintingPage() {
           </div>
 
           {/* Token Form */}
-          <form className="space-y-6">
+          <form onSubmit={handleMint} className="space-y-6">
             <div>
               <label
                 htmlFor="name"
@@ -107,8 +121,9 @@ export default function MintingPage() {
               <button
                 type="submit"
                 className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-pink-500 to-orange-500 text-black font-semibold rounded-lg hover:opacity-90 transition-all"
+                disabled={isMinting}
               >
-                Mint NFT
+                {isMinting ? "Minting..." : "Mint NFT"}
               </button>
             </div>
           </form>
@@ -123,6 +138,9 @@ export default function MintingPage() {
           </p>
         </div>
       </footer>
+
+      {/* Minting Progress Popup */}
+      {isMinting && <MintProgressPopup onClose={() => setIsMinting(false)} imageUrl={imageUrl} />}
     </div>
   );
 }
