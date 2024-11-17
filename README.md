@@ -1,5 +1,6 @@
 # Apticity 🎨✨  
 **AI-Generated NFT Art Platform on Aptos Blockchain**  
+Deployed at : apticity-chi.vercel.app
 
 **Transaction Hash (Devnet)**: `0x336c5b1d8315380357146af24deebd10e2f3280cd38bdcbd66f2784795621365`  
 
