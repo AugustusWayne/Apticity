@@ -42,7 +42,7 @@ const MODEL_NAMES = ["stable-diffusion-2-1", "FLUX.1-dev"];
 
 export default function LandingPage() {
   const [prompt, setPrompt] = useState("angel aesthetic robot girl, highly stylized");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null); // Track copied ID
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isDemoImage, setIsDemoImage] = useState(false);
   const [model, setModel] = useState(MODEL_NAMES[0]);
@@ -53,8 +53,8 @@ export default function LandingPage() {
   const copyToClipboard = async (text: string, id: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      setCopiedId(id); // Set the copied ID
+      setTimeout(() => setCopiedId(null), 2000); // Clear after 2 seconds
     } catch (err) {
       console.error("Failed to copy text: ", err);
     }
@@ -111,19 +111,20 @@ export default function LandingPage() {
                 rel="noopener noreferrer"
                 className="text-pink-500 hover:text-pink-400 transition-colors"
               >
-                {typedModelName }
+                {typedModelName}
               </a>
- 
             </p>
             <p className="mb-12 text-base text-pink-200/70">
-            Choose <a
-                href={`https://huggingface.co/black-forest-labs/FLUX.1-dev"`}
+              Choose{" "}
+              <a
+                href={`https://huggingface.co/black-forest-labs/FLUX.1-dev`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-pink-500 hover:text-pink-400 transition-colors"
               >
                 FLUX.1-dev
-              </a> for better image generation, may take upto 45 seconds to generate!
+              </a>{" "}
+              for better image generation, may take up to 45 seconds to generate!
             </p>
 
             {/* Generator Interface */}
@@ -193,12 +194,20 @@ export default function LandingPage() {
                       <div>
                         <div className="flex justify-between">
                           <h3 className="text-lg font-medium text-white">{example.title}</h3>
-                          <button onClick={() => copyToClipboard(example.description, example.id)} className="text-pink-500 hover:text-pink-400">
+                          <button
+                            onClick={() => copyToClipboard(example.description, example.id)}
+                            className="text-pink-500 hover:text-pink-400"
+                          >
                             <Copy size={20} />
                           </button>
                         </div>
                         <p className="text-sm text-pink-200 mt-2">{example.description}</p>
                       </div>
+
+                      {/* Display "Copied" text */}
+                      {copiedId === example.id && (
+                        <span className="text-green-500 mt-2 text-sm">Copied!</span>
+                      )}
                     </div>
                   </div>
                 </div>
