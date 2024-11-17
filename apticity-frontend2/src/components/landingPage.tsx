@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Settings, Copy } from 'lucide-react'
+import { GenerateButton } from "./generateButton"
 
 interface PromptExample {
   id: string
@@ -82,8 +83,8 @@ export default function LandingPage() {
                   <button className="px-4 py-2 text-pink-200/70 hover:text-white">
                     SURPRISE ME
                   </button>
-                  <button className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 rounded">
-                    GENERATE
+                  <button>
+                  <GenerateButton/>
                   </button>
                 </div>
               </div>
