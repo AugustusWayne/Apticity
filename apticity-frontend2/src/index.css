@@ -25,3 +25,16 @@
 * {
   @apply transition-colors duration-200;
 }
+@keyframes borderLineGlow {
+  0%, 100% {
+    border: 1px solid rgba(255, 133, 243, 0.6);
+  }
+  50% {
+    border: 1px solid rgba(255, 87, 208, 1);
+  }
+}
+
+.animate-border-line {
+  animation: borderLineGlow 2s infinite alternate;
+  border-radius: 0.375rem; /* Ensure rounded borders match design */
+}

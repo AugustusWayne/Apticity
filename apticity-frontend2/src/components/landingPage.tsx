@@ -41,7 +41,9 @@ const examples: PromptExample[] = [
 const MODEL_NAMES = ["stable-diffusion-2-1", "FLUX.1-dev"];
 
 export default function LandingPage() {
-  const [prompt, setPrompt] = useState("angel aesthetic robot girl, highly stylized");
+  const [prompt, setPrompt] = useState(
+    "angel aesthetic robot girl, highly stylized"
+  );
   const [copiedId, setCopiedId] = useState<string | null>(null); // Track copied ID
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isDemoImage, setIsDemoImage] = useState(false);
@@ -73,7 +75,9 @@ export default function LandingPage() {
             setIsTyping(false);
             setTypingIndex(0);
             setTypedModelName("");
-            setModel((prev) => (prev === MODEL_NAMES[0] ? MODEL_NAMES[1] : MODEL_NAMES[0]));
+            setModel((prev) =>
+              prev === MODEL_NAMES[0] ? MODEL_NAMES[1] : MODEL_NAMES[0]
+            );
             setIsTyping(true);
           }, 1000); // Wait for 1 second before switching the model
         }
@@ -84,7 +88,8 @@ export default function LandingPage() {
   }, [isTyping, typingIndex, model]);
 
   // Check if the generated image is a demo image
-  const checkIfDemoImage = (imageUrl: string) => examples.some((example) => example.imageUrl === imageUrl);
+  const checkIfDemoImage = (imageUrl: string) =>
+    examples.some((example) => example.imageUrl === imageUrl);
 
   return (
     <div className="min-h-screen bg-black text-white w-full flex flex-col">
@@ -100,13 +105,19 @@ export default function LandingPage() {
           <div className="relative z-10 text-center">
             <h1 className="mb-4 text-6xl font-bold tracking-tight">
               Generate
-              <span className="mx-4 inline-block rounded border border-pink-900/30 px-4 py-2">NFT</span>
+              <span className="mx-4 inline-block rounded border border-transparent px-4 py-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 animate-border-line">
+                NFT
+              </span>
               with AI.
             </h1>
             <p className="mb-4 text-xl text-pink-200/70">
               Create and deploy NFT artwork in seconds, powered by{" "}
               <a
-                href={`https://huggingface.co/${model === "FLUX.1-dev" ? "black-forest-labs/FLUX.1-dev" : "stabilityai/stable-diffusion-2-1"}`}
+                href={`https://huggingface.co/${
+                  model === "FLUX.1-dev"
+                    ? "black-forest-labs/FLUX.1-dev"
+                    : "stabilityai/stable-diffusion-2-1"
+                }`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-pink-500 hover:text-pink-400 transition-colors"
@@ -124,7 +135,8 @@ export default function LandingPage() {
               >
                 FLUX.1-dev
               </a>{" "}
-              for better image generation, may take up to 45 seconds to generate!
+              for better image generation, may take up to 45 seconds to
+              generate!
             </p>
 
             {/* Generator Interface */}
@@ -179,34 +191,51 @@ export default function LandingPage() {
               </span>
               <h2 className="text-5xl font-mono mt-4 tracking-tight">
                 Prompt{" "}
-                <span className="inline-block border border-dashed border-pink-900/30 px-4 py-1 rounded">examples</span>
+                <span className="inline-block border border-dashed border-pink-900/30 px-4 py-1 rounded">
+                  examples
+                </span>
               </h2>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {examples.map((example) => (
-                <div key={example.id} className="group bg-pink-950/10 rounded-lg border border-pink-900/30 p-4 hover:border-pink-700/50 transition-all duration-300">
+                <div
+                  key={example.id}
+                  className="group bg-pink-950/10 rounded-lg border border-pink-900/30 p-4 hover:border-pink-700/50 transition-all duration-300"
+                >
                   <div className="flex gap-4">
                     <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-                      <img src={example.imageUrl} alt={example.title} className="object-cover w-full h-full" />
+                      <img
+                        src={example.imageUrl}
+                        alt={example.title}
+                        className="object-cover w-full h-full"
+                      />
                     </div>
                     <div className="flex flex-col justify-between flex-grow">
                       <div>
                         <div className="flex justify-between">
-                          <h3 className="text-lg font-medium text-white">{example.title}</h3>
+                          <h3 className="text-lg font-medium text-white">
+                            {example.title}
+                          </h3>
                           <button
-                            onClick={() => copyToClipboard(example.description, example.id)}
+                            onClick={() =>
+                              copyToClipboard(example.description, example.id)
+                            }
                             className="text-pink-500 hover:text-pink-400"
                           >
                             <Copy size={20} />
                           </button>
                         </div>
-                        <p className="text-sm text-pink-200 mt-2">{example.description}</p>
+                        <p className="text-sm text-pink-200 mt-2">
+                          {example.description}
+                        </p>
                       </div>
 
                       {/* Display "Copied" text */}
                       {copiedId === example.id && (
-                        <span className="text-green-500 mt-2 text-sm">Copied!</span>
+                        <span className="text-green-500 mt-2 text-sm">
+                          Copied!
+                        </span>
                       )}
                     </div>
                   </div>
