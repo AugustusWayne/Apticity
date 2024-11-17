@@ -8,7 +8,7 @@ module apticity::nft_minter {
     use aptos_token_objects::collection;
     use aptos_token_objects::token;
     use aptos_framework::object::{Self, Object};
-    use aptos_framework::coin::{self, Coin};
+    use aptos_framework::coin;
 
     /// Custom error codes
     const ENOT_AUTHORIZED: u64 = 1;
@@ -18,12 +18,19 @@ module apticity::nft_minter {
 
     /// Struct to store collection data
     struct CollectionData has key {
+        /// Name of the collection
         name: String,
+        /// Description of the collection
         description: String,
+        /// URI for collection metadata
         uri: String,
+        /// Maximum supply of NFTs
         max_supply: u64,
+        /// Current supply of NFTs
         current_supply: u64,
+        /// Mint start time
         mint_start_time: u64,
+        /// Mint price in APT
         mint_price: u64,
     }
 
@@ -36,6 +43,13 @@ module apticity::nft_minter {
     }
 
     /// Initialize collection - can only be called once by contract owner
+    /// @param creator - Signer representing the creator/owner
+    /// @param name - Name of the collection
+    /// @param description - Description of the collection
+    /// @param uri - URI for collection metadata
+    /// @param max_supply - Maximum number of NFTs that can be minted
+    /// @param mint_start_time - Timestamp when minting can start
+    /// @param mint_price - Price in APT to mint one NFT
     public entry fun initialize_collection(
         creator: &signer,
         name: String,
@@ -45,9 +59,6 @@ module apticity::nft_minter {
         mint_start_time: u64,
         mint_price: u64
     ) {
-        // Ensure collection is not initialized twice
-        assert!(borrow_global<Option<CollectionData>>(@my_addr) == None, ECOLLECTION_NOT_INITIALIZED);
-
         // Create a new collection
         collection::create_unlimited_collection(
             creator,
@@ -70,6 +81,10 @@ module apticity::nft_minter {
     }
 
     /// Mint a new NFT
+    /// @param recipient - Address that will receive the NFT
+    /// @param name - Name of the NFT
+    /// @param description - Description of the NFT
+    /// @param uri - URI for NFT metadata
     public entry fun mint_nft(
         recipient: &signer,
         name: String,
@@ -78,26 +93,25 @@ module apticity::nft_minter {
     ) acquires CollectionData {
         let recipient_addr = signer::address_of(recipient);
         
-        // Retrieve collection data
-        let collection_data = borrow_global_mut<CollectionData>(@my_addr);
+        // Get collection data
+        let collection_data = borrow_global_mut<CollectionData>(@apticity);
 
         // Verify minting is active
         assert!(timestamp::now_seconds() >= collection_data.mint_start_time, EINVALID_MINT_TIME);
         
-        // Verify that supply hasn't exceeded max supply
+        // Verify supply
         assert!(collection_data.current_supply < collection_data.max_supply, ECOLLECTION_NOT_INITIALIZED);
 
-        // Check if the minting price is greater than 0 and handle payment logic
+        // Verify payment (if mint price is greater than 0)
         if (collection_data.mint_price > 0) {
-            let mint_price = collection_data.mint_price;
             let sender_balance = coin::balance_of<Coin>(recipient, aptos_framework::aptos_coin::APT);
-            assert!(sender_balance >= mint_price, ENOT_ENOUGH_FUNDS);
+            assert!(sender_balance >= collection_data.mint_price, ENOT_ENOUGH_FUNDS);
 
-            // Transfer the minting fee
-            coin::transfer_from(sender_balance, recipient, aptos_framework::aptos_coin::APT, mint_price);
+            // Transfer mint price (if applicable)
+            coin::transfer_from(sender_balance, recipient, aptos_framework::aptos_coin::APT, collection_data.mint_price);
         }
 
-        // Mint the NFT by creating a token object
+        // Create the token
         let constructor_ref = token::create_from_account(
             recipient,
             collection_data.name,
@@ -109,26 +123,28 @@ module apticity::nft_minter {
             vector::empty<String>(), // property_types
         );
 
-        // Increment the supply count
+        // Increment supply
         collection_data.current_supply = collection_data.current_supply + 1;
 
-        // Emit minting event
+        // Emit mint event
         event::emit(MintEvent {
             token_id: object::address_from_constructor_ref(&constructor_ref),
-            creator: @my_addr,
+            creator: @apticity,
             recipient: recipient_addr,
             timestamp: timestamp::now_seconds(),
         });
     }
 
     /// Get collection data
+    /// @return CollectionData struct containing collection information
     public fun get_collection_data(): CollectionData acquires CollectionData {
-        *borrow_global<CollectionData>(@my_addr)
+        *borrow_global<CollectionData>(@apticity)
     }
 
     /// Check if minting is active
+    /// @return bool indicating if minting is currently active
     public fun is_minting_active(): bool acquires CollectionData {
-        let collection_data = borrow_global<CollectionData>(@my_addr);
+        let collection_data = borrow_global<CollectionData>(@apticity);
         timestamp::now_seconds() >= collection_data.mint_start_time &&
             collection_data.current_supply < collection_data.max_supply
     }

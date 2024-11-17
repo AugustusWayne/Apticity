@@ -4,10 +4,10 @@ version = "1.0.0"
 authors = []
 
 [addresses]
-apticity="_"
+apticity = "0x602690533d07631c58b55d18acc9354da5360977e65c16466de84362c22817a3"  # Use your public key here (Devnet address)
 
 [dev-addresses]
-apticity="0x602690533d07631c58b55d18acc9354da5360977e65c16466de84362c22817a3"
+apticity = "0x602690533d07631c58b55d18acc9354da5360977e65c16466de84362c22817a3"  # Devnet address for local testing (same as above)
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-framework.git"
@@ -15,6 +15,5 @@ rev = "mainnet"
 subdir = "aptos-framework"
 
 [dev-dependencies]
-
 
 #0x640ab888e41dfe3675cfac8fbb663ea8bd35390cb2d12ccba46fbddb89f74122

@@ -1,14 +1,9 @@
-// GenerateButton.tsx
 import { useState } from "react";
-import OpenAI from "openai";
-import { useWallet } from "./walletProvider";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useWallet } from './walletProvider';
 
-// OpenAI client initialization
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
+// Load Hugging Face API key from environment variable
+const HUGGING_FACE_API_KEY = import.meta.env.VITE_HUGGING_FACE_API_KEY;
 
 interface GenerateButtonProps {
   prompt: string;
@@ -26,6 +21,24 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
 
   const demoImageUrl = "./images/ai2.webp"; // Path to demo image
 
+  // Function to handle different error types
+  const handleError = (error: any) => {
+    let errorMessage = "Failed to generate image. Displaying a demo instead.";
+    
+    if (error?.message) {
+      if (error.message.includes("500")) {
+        errorMessage = "Server error. Please try again later.";
+      } else if (error.message.includes("429")) {
+        errorMessage = "Rate limit exceeded. Please try again after some time.";
+      } else if (error.message.includes("Billing hard limit")) {
+        errorMessage = "OpenAI account usage limit reached. Please check your billing settings.";
+      }
+    }
+
+    setError(errorMessage);
+    onImageGenerated(demoImageUrl); // Show demo image in case of error
+  };
+
   const handleGenerateClick = async () => {
     if (!walletAddress) {
       setShowConnectPrompt(true);
@@ -41,27 +54,28 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
       setIsGenerating(true);
       setError(null);
 
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: prompt,
-        n: 1,
-        size: "1024x1024",
-      });
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${HUGGING_FACE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ inputs: prompt }),
+        }
+      );
 
-      const imageUrl = response.data[0]?.url;
-      if (imageUrl) {
-        onImageGenerated(imageUrl); // Pass image URL back to parent
-      } else {
-        throw new Error("No image returned from the API");
+      if (!response.ok) {
+        throw new Error(`Failed with status ${response.status}`);
       }
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      onImageGenerated(imageUrl); // Pass image URL back to parent
     } catch (err: any) {
       console.error("Generation failed:", err);
-      setError(
-        err.message?.includes("Billing hard limit")
-          ? "OpenAI account usage limit reached. Please check your billing settings."
-          : "Failed to generate image. Displaying a demo instead."
-      );
-      onImageGenerated(demoImageUrl); // Show demo image in case of error
+      handleError(err);
     } finally {
       setIsGenerating(false);
     }
@@ -110,11 +124,7 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
                     }
                   }}
                 >
-                  <img
-                    src="/petra-wallet.png"
-                    alt="Petra"
-                    className="w-4 h-4"
-                  />
+                  <img src="/petra-wallet.png" alt="Petra" className="w-4 h-4" />
                   Connect Petra Wallet
                 </button>
               )}
@@ -130,11 +140,7 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
                     }
                   }}
                 >
-                  <img
-                    src="/martian-wallet-icon.avif"
-                    alt="Martian"
-                    className="w-4 h-4"
-                  />
+                  <img src="/martian-wallet-icon.avif" alt="Martian" className="w-4 h-4" />
                   Connect Martian Wallet
                 </button>
               )}
