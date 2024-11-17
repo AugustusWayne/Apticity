@@ -8,6 +8,11 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true
 });
 
+interface GenerateButtonProps {
+  prompt: string;
+  onImageGenerated: (imageUrl: string) => void;
+}
+
 export function GenerateButton({ prompt, onImageGenerated }: GenerateButtonProps) {
   const { walletAddress, connectWallet } = useWallet();
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
