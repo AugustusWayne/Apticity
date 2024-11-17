@@ -1,7 +1,5 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import WalletConnect from './components/WalletConnect';
+import WalletConnect from './components/connectWallet';
 
 function App() {
   return (
@@ -12,3 +10,4 @@ function App() {
 }
 
 export default App;
+

@@ -1,8 +1,27 @@
-import React from 'react';
+import * as React from 'react'
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { extendTheme } from '@chakra-ui/react'
+import { SaasProvider, theme as baseTheme } from '@saas-ui/react'
+
+const colors = {
+  brand: {
+    900: '#1a365d',
+    800: '#153e75',
+    700: '#2a69ac',
+  },
+}
+
+const theme = extendTheme({ colors }, baseTheme)
+
+function App() {
+  return (
+    <SaasProvider theme={theme}>
+      <App />
+    </SaasProvider>
+  )
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

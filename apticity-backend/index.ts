@@ -9,7 +9,7 @@ app.post("/verify-wallet", async (req, res) => {
     // Verify the wallet signature here
     try {
         const isValid = await verifySignature(address, signedMessage, originalMessage);
-        if (isValid) {
+        if (isValid) {  
             res.json({ message: "Wallet verified successfully" });
         } else {
             res.status(400).json({ error: "Invalid signature" });

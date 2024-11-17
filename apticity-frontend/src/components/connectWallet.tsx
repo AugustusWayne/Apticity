@@ -7,7 +7,7 @@ declare global {
     }
 }
 
-const WalletConnect = () => {
+const connectWallet = () => {
     const [wallet, setWallet] = useState<string | null>(null);
     const [walletProvider, setWalletProvider] = useState<string | null>(null);
 
@@ -56,4 +56,4 @@ const WalletConnect = () => {
     );
 };
 
-export default WalletConnect;
+export default connectWallet;
