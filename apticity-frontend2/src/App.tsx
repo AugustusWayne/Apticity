@@ -5,6 +5,10 @@ import Footer from "./components/footer";
 import { WalletProvider } from "./components/walletProvider";
 import MintingPage from "./components/mintingPage";
 
+// import { AptosClient } from "aptos";
+// export const NODE_URL = "https://fullnode.devnet.aptoslabs.com";
+// export const client = new AptosClient(NODE_URL);
+
 function App() {
   return (
     <>
