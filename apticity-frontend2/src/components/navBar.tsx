@@ -3,7 +3,14 @@ import { useState } from "react";
 import { useWallet } from './walletProvider';
 
 export function Navbar() {
-  const { walletAddress, walletProvider, isConnecting, connectWallet, disconnectWallet } = useWallet();
+  const {
+    walletAddress,
+    walletProvider,
+    isConnecting,
+    connectWallet,
+    disconnect, // Updated from disconnectWallet
+    error, // Updated from errorMessage
+  } = useWallet();
   const [showWalletDropdown, setShowWalletDropdown] = useState(false);
 
   const formatAddress = (address: string): string => {
@@ -15,7 +22,7 @@ export function Navbar() {
       await connectWallet(provider);
       setShowWalletDropdown(false);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to connect wallet");
+      console.error(error);
     }
   };
 
@@ -58,7 +65,7 @@ export function Navbar() {
                 <div className="relative group">
                   <button
                     className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 rounded-lg text-white flex items-center gap-2"
-                    onClick={disconnectWallet}
+                    onClick={disconnect} // Updated from disconnectWallet
                   >
                     <Wallet className="w-4 h-4" />
                     {formatAddress(walletAddress)}
@@ -113,6 +120,13 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Show error message if any */}
+      {error && ( // Updated from errorMessage
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg">
+          {error}
+        </div>
+      )}
     </nav>
   );
 }

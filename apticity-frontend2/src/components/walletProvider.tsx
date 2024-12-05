@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext } from "react";
+import { Network, AptosConfig, TransactionPayload } from "@aptos-labs/ts-sdk";
 
 // Type definitions
 interface WalletResponse {
@@ -12,88 +13,94 @@ declare global {
   }
 }
 
-// Create wallet context
-interface WalletContextType {
+export interface WalletContextType {
   walletAddress: string | null;
-  walletProvider: string | null;
-  isConnecting: boolean;
-  availableWallets: string[]; // To store detected wallets
   connectWallet: (provider: string) => Promise<void>;
-  disconnectWallet: () => Promise<void>;
+  signAndSubmitTransaction: (transaction: TransactionPayload) => Promise<string>;
+  walletProvider: string | null;
+  disconnect: () => Promise<void>;
+  isConnecting: boolean;
+  error: string | null;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
 
-// Wallet Provider Component
+new AptosConfig({ network: Network.TESTNET }); // Initialize network config
+
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [walletProvider, setWalletProvider] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [availableWallets, setAvailableWallets] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Check for existing connections and detect available wallets on mount
+  // Check for existing connections on mount
   useEffect(() => {
-    const checkAvailableWallets = async () => {
-      const detectedWallets: string[] = [];
-      if (window.aptos) {
-        detectedWallets.push("Petra");
-        try {
+    const checkExistingConnection = async () => {
+      try {
+        // Check Petra connection
+        if (window.aptos) {
           const account = await window.aptos.account();
           if (account) {
             setWalletAddress(account.address);
             setWalletProvider("Petra");
+            return;
           }
-        } catch {
-          console.log("No active connection to Petra.");
         }
-      }
 
-      if (window.martian) {
-        detectedWallets.push("Martian");
-        try {
+        // Check Martian connection
+        if (window.martian) {
           const account = await window.martian.account();
           if (account) {
             setWalletAddress(account.address);
             setWalletProvider("Martian");
+            return;
           }
-        } catch {
-          console.log("No active connection to Martian.");
         }
+      } catch (err) {
+        setError("Failed to check existing wallet connections");
+        console.error("Wallet connection check failed:", err);
       }
-
-      setAvailableWallets(detectedWallets);
     };
 
-    checkAvailableWallets();
+    checkExistingConnection();
   }, []);
 
   const connectWallet = async (provider: string) => {
     if (isConnecting) return;
 
     setIsConnecting(true);
+    setError(null);
+    
     try {
       let response: WalletResponse;
 
-      if (provider === "Petra" && window.aptos) {
+      if (provider === "Petra") {
+        if (!window.aptos) {
+          throw new Error("Petra wallet not found! Please install it first.");
+        }
         response = await window.aptos.connect();
         setWalletAddress(response.address);
         setWalletProvider("Petra");
-      } else if (provider === "Martian" && window.martian) {
+      } else if (provider === "Martian") {
+        if (!window.martian) {
+          throw new Error("Martian wallet not found! Please install it first.");
+        }
         response = await window.martian.connect();
         setWalletAddress(response.address);
         setWalletProvider("Martian");
       } else {
-        throw new Error(`${provider} wallet not found! Please install it first.`);
+        throw new Error("Unsupported wallet provider");
       }
-    } catch (error: any) {
-      console.error("Wallet connection failed:", error.message || error);
-      alert(`Wallet connection failed: ${error.message || "Unknown error occurred."}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Wallet connection failed";
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const disconnectWallet = async () => {
+  const disconnect = async () => {
     try {
       if (walletProvider === "Petra" && window.aptos) {
         await window.aptos.disconnect();
@@ -102,9 +109,37 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       }
       setWalletAddress(null);
       setWalletProvider(null);
-    } catch (error: any) {
-      console.error("Wallet disconnection failed:", error.message || error);
-      alert(`Wallet disconnection failed: ${error.message || "Unknown error occurred."}`);
+      setError(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to disconnect wallet";
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
+  const signAndSubmitTransaction = async (transaction: TransactionPayload): Promise<string> => {
+    if (!walletAddress || !walletProvider) {
+      throw new Error("Wallet not connected");
+    }
+
+    try {
+      let hash: string;
+      
+      if (walletProvider === "Petra") {
+        const pendingTransaction = await window.aptos.signAndSubmitTransaction(transaction);
+        hash = pendingTransaction.hash;
+      } else if (walletProvider === "Martian") {
+        const pendingTransaction = await window.martian.signAndSubmitTransaction(transaction);
+        hash = pendingTransaction.hash;
+      } else {
+        throw new Error("Unsupported wallet provider");
+      }
+
+      return hash;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Transaction failed";
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
@@ -112,11 +147,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     <WalletContext.Provider
       value={{
         walletAddress,
-        walletProvider,
-        isConnecting,
-        availableWallets,
         connectWallet,
-        disconnectWallet,
+        walletProvider,
+        signAndSubmitTransaction,
+        disconnect,
+        isConnecting,
+        error
       }}
     >
       {children}
@@ -124,7 +160,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Custom hook for using wallet context
 export const useWallet = () => {
   const context = useContext(WalletContext);
   if (!context) {

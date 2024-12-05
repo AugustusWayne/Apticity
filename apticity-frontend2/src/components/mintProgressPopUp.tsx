@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-interface MintProgressPopupProps {
+export interface MintProgressPopupProps {
   onClose: () => void;
-  imageUrl: string; // Dynamic image URL passed from the parent component
+  imageUrl: string;
+  currentStep: number;
+  error: string | null;
 }
 
 const MintProgressPopup: React.FC<MintProgressPopupProps> = ({ onClose, imageUrl }) => {

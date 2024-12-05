@@ -1,109 +1,157 @@
-module apticity::nft_minter {
-    use std::string::{String};
+module apticity::nft_mint {
     use std::vector;
-    use std::signer;
     use aptos_framework::account;
     use aptos_framework::event;
     use aptos_framework::timestamp;
-    use aptos_token_objects::collection;
-    use aptos_token_objects::token;
-    use aptos_framework::object::{Object};
-    use aptos_framework::coin;
+    use aptos_std::simple_map::{Self, SimpleMap};
 
-    /// Custom error codes
-    const ENOT_AUTHORIZED: u64 = 1;
-    const ECOLLECTION_NOT_INITIALIZED: u64 = 2;
-    const EINVALID_MINT_TIME: u64 = 3;
-    const ENOT_ENOUGH_FUNDS: u64 = 4;
+    // ======== Constants ========
+    const MAX_SUPPLY: u64 = 10000;
+    const MINT_PRICE: u64 = 100;
 
-    /// Struct to store collection data
-    struct CollectionData has key {
-        name: String,
-        description: String,
-        uri: String,
-        max_supply: u64,
-        current_supply: u64,
-        mint_start_time: u64,
-        mint_price: u64,
+    // ======== Error Codes ========
+    const ERROR_MAX_SUPPLY_REACHED: u64 = 101;
+    const ERROR_ALREADY_MINTED: u64 = 102;
+    const ERROR_INVALID_TOKEN_ID: u64 = 103;
+    const ERROR_NOT_AUTHORIZED: u64 = 104;
+
+    // ======== Core Structures ========
+    struct NFTCollection has key {
+        token_data: SimpleMap<u64, TokenData>,
+        mint_count: u64,
+        owner: address
     }
 
-    /// Event emitted when NFT is minted
-    struct MintEvent has drop, store {
-        token_id: address,
-        creator: address,
-        recipient: address,
-        timestamp: u64,
+    struct TokenData has store, drop, copy {
+        token_id: u64,
+        metadata: vector<u8>,
+        owner: address,
+        mint_time: u64,
+        mint_status: MintStatus
     }
 
-    public entry fun initialize_collection(
-        creator: &signer,
-        name: String,
-        description: String,
-        uri: String,
-        max_supply: u64,
-        mint_start_time: u64,
-        mint_price: u64
-    ) {
-        collection::create_unlimited_collection(
-            creator,
-            description,
-            name,
-            Some(uri),
-            true, // mutate_setting
-        );
+    struct MintStatus has store, drop, copy {
+        is_revealed: bool,
+        is_locked: bool
+    }
 
-        move_to(creator, CollectionData {
-            name,
-            description,
-            uri,
-            max_supply,
-            current_supply: 0,
-            mint_start_time,
-            mint_price
+    // ======== Event Management ========
+    struct MintEvents has key {
+        mint_started_events: event::EventHandle<MintStartedEvent>,
+        mint_completed_events: event::EventHandle<MintCompletedEvent>
+    }
+
+    struct MintStartedEvent has drop, store {
+        token_id: u64,
+        minter: address,
+        timestamp: u64
+    }
+
+    struct MintCompletedEvent has drop, store {
+        token_id: u64,
+        owner: address
+    }
+
+    // ======== Module Initialization ========
+    fun init_module(creator: &signer) {
+        let creator_addr = std::signer::address_of(creator);
+        
+        move_to(creator, NFTCollection {
+            token_data: simple_map::create(),
+            mint_count: 0,
+            owner: creator_addr
+        });
+
+        move_to(creator, MintEvents {
+            mint_started_events: account::new_event_handle<MintStartedEvent>(creator),
+            mint_completed_events: account::new_event_handle<MintCompletedEvent>(creator)
         });
     }
 
-    public entry fun mint_nft(
-        recipient: &signer,
-        name: String,
-        description: String,
-        uri: String,
-    ) acquires CollectionData {
-        let recipient_addr = signer::address_of(recipient);
+    // ======== Core Minting Logic ========
+    public entry fun initiate_mint(
+        minter: &signer, 
+        metadata: vector<u8>
+    ) acquires NFTCollection, MintEvents {
+        let collection = borrow_global_mut<NFTCollection>(@apticity);
+        let minter_addr = std::signer::address_of(minter);
         
-        // Get collection data
-        let collection_data = borrow_global_mut<CollectionData>(@apticity);
-
-        // Verify minting is active
-        assert!(timestamp::now_seconds() >= collection_data.mint_start_time, EINVALID_MINT_TIME);
+        // Validate mint conditions
+        assert!(collection.mint_count < MAX_SUPPLY, ERROR_MAX_SUPPLY_REACHED);
         
-        // Verify supply
-        assert!(collection_data.current_supply < collection_data.max_supply, ECOLLECTION_NOT_INITIALIZED);
+        // Create new token
+        let new_token = TokenData {
+            token_id: collection.mint_count,
+            metadata,
+            owner: minter_addr,
+            mint_time: timestamp::now_microseconds(),
+            mint_status: MintStatus {
+                is_revealed: false,
+                is_locked: false
+            }
+        };
 
-        // Verify payment
-        if (collection_data.mint_price > 0) {
-            let sender_balance = coin::balance_of<Coin>(recipient, aptos_framework::aptos_coin::APT);
-            assert!(sender_balance >= collection_data.mint_price, ENOT_ENOUGH_FUNDS);
+        // Store token and emit event
+        simple_map::add(&mut collection.token_data, collection.mint_count, new_token);
+        
+        let events = borrow_global_mut<MintEvents>(@apticity);
+        event::emit_event(&mut events.mint_started_events, MintStartedEvent {
+            token_id: collection.mint_count,
+            minter: minter_addr,
+            timestamp: timestamp::now_microseconds()
+        });
 
-            // Transfer mint price
-            coin::transfer_from(sender_balance, recipient, aptos_framework::aptos_coin::APT, collection_data.mint_price);
-        }
+        // Increment mint counter
+        collection.mint_count = collection.mint_count + 1;
+    }
 
-        // Token creation (adjusted code)
-        token::mint(
-            recipient,
-            collection_data.name,
-            description,
-            name,
-            Some(uri),
-            vector::empty<String>(), // property_keys
-            vector::empty<vector<u8>>(), // property_values
-            vector::empty<String>(), // property_types
-        );
+    public entry fun complete_mint(
+        token_id: u64
+    ) acquires NFTCollection, MintEvents {
+        let collection = borrow_global_mut<NFTCollection>(@apticity);
+        
+        assert!(simple_map::contains_key(&collection.token_data, &token_id), ERROR_INVALID_TOKEN_ID);
+        let token = simple_map::borrow_mut(&mut collection.token_data, &token_id);
+        
+        assert!(!token.mint_status.is_revealed, ERROR_ALREADY_MINTED);
+        
+        // Update token status
+        token.mint_status.is_revealed = true;
+        token.mint_status.is_locked = true;
 
-        // Increment supply
-        collection_data.current_supply = collection_data.current_supply + 1;
+        // Emit completion event
+        let events = borrow_global_mut<MintEvents>(@apticity);
+        event::emit_event(&mut events.mint_completed_events, MintCompletedEvent {
+            token_id,
+            owner: token.owner
+        });
+    }
 
-        // Emit mint event
-        event::emit(MintEvent {
-            token_id: object::address_from_constructor_ref(&constructor_ref), // Adjus
+    // ======== View Functions ========
+    #[view]
+    public fun get_token_data(token_id: u64): TokenData acquires NFTCollection {
+        let collection = borrow_global<NFTCollection>(@apticity);
+        assert!(simple_map::contains_key(&collection.token_data, &token_id), ERROR_INVALID_TOKEN_ID);
+        *simple_map::borrow(&collection.token_data, &token_id)
+    }
+
+    #[view]
+    public fun get_collection_info(): (u64, u64) acquires NFTCollection {
+        let collection = borrow_global<NFTCollection>(@apticity);
+        (collection.mint_count, MAX_SUPPLY)
+    }
+
+    #[view]
+    public fun get_minted_tokens(): vector<TokenData> acquires NFTCollection {
+        let collection = borrow_global<NFTCollection>(@apticity);
+        let tokens = vector::empty<TokenData>();
+        let i = 0;
+        while (i < collection.mint_count) {
+            if (simple_map::contains_key(&collection.token_data, &i)) {
+                vector::push_back(&mut tokens, *simple_map::borrow(&collection.token_data, &i));
+            };
+            i = i + 1;
+        };
+        tokens
+    }
+}
